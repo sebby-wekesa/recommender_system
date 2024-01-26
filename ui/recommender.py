@@ -25,18 +25,19 @@ class AprioriRecommentor:
 
         """
         product_desc = self.data[self.data["StockCode"] == stockCode]["Description"].unique()
+        #print(product_desc)
         return stockCode, product_desc[0]
 
     def create_Aprioli_ARL_rules(self):
         invoice_product_matrix = self.create_apriori_matric_for_products()
         # get apriori frequency for items
         apriori_freq_data = apriori(
-            invoice_product_matrix, 
-            min_support= self.min_support_val, 
-            use_colnames=True)  
+            invoice_product_matrix,
+            min_support= self.min_support_val,
+            use_colnames=True)
         association_rules_in_market = association_rules(
-            apriori_freq_data, 
-            metric="lift", 
+            apriori_freq_data,
+            metric="lift",
             min_threshold=self.min_support_val)
         #sort these rules
         sorted_association_rules_in_market = association_rules_in_market.sort_values(['confidence', 'lift'], ascending =[False, False])
@@ -63,6 +64,7 @@ class AprioriRecommentor:
     def show_products_recommended_to_user(self,prod_id, max_recommendent_items=10):
         #check if product id is present
         if str(prod_id) in list(self.data["StockCode"].astype("str").unique()):
+            print("We fouund some products...")
             #get the recommended list
             recommended_product_list = self.recommend_product_to_user(str(prod_id), max_recommendent_items)
             #check if there was any product recommended to the user i.e if list is empty
@@ -71,14 +73,16 @@ class AprioriRecommentor:
             else:
                 res = []
                 for index in range(0, len(recommended_product_list)):
+                    #print(recommended_product_list, "Recommended list")
                     curr_product = self.find_stock_by_id(recommended_product_list[index])
                     res.append({
                         "Product_code": curr_product[0],
                         "Description": curr_product[1]
                     })
-                
+
                 return {"Product_Code":prod_id,"data":res, "advice":"We have the following products recommended for you"}
 
         else:
             return {"Product_Code":prod_id,"data":[], "advice":f"Code  {prod_id} was invalid as it is not in the stock"}
+
 

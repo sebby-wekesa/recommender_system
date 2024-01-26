@@ -1,6 +1,7 @@
 import pickle
 from recommender import AprioriRecommentor
 import json
+import pandas as pd
 
 
 from flask import Flask, flash, request, redirect, render_template,url_for
@@ -12,9 +13,10 @@ app = Flask(__name__)
 @app.route("/", methods=['POST', 'GET'])
 def index():
     #load the model
-    with open("./recommender_model.pkl", "rb") as model_object:
-        model = pickle.load(model_object)
-        model_object.close()
+    #with open("./recommender_model.pkl", "rb") as model_object:
+    #    model = pickle.load(model_object)
+    #   model_object.close()
+    model = pd.read_pickle("final_model.pkl")
     #get random ids to show the user samples
     sample_product_ids =[]
     for prod_ids in model.sorted_association_rules_in_market["antecedents"]:
@@ -26,7 +28,11 @@ def index():
     if request.method == 'POST':
         #extract the code typed
         product_code_entered = request.form['product_code']
-        res = model.show_products_recommended_to_user(product_code_entered)
+        try:
+            code_entered = int(product_code_entered)
+            res = model.show_products_recommended_to_user(code_entered)
+        except Exception as e:
+            res = model.show_products_recommended_to_user(product_code_entered)
         if len(res['data']) ==0:
             return render_template("./res.html", result=None, result_id = None, random_ids_codes = random_ids)
         
@@ -40,4 +46,4 @@ def index():
         return render_template("./res.html", result=None, result_id = 1, random_ids_codes = random_ids)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
